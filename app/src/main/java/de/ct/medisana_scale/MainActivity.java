@@ -43,10 +43,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        final int PERM_GRANT = PackageManager.PERMISSION_GRANTED;
         if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.BLUETOOTH_ADMIN) != PackageManager.PERMISSION_GRANTED ||
+                Manifest.permission.BLUETOOTH_ADMIN) != PERM_GRANT ||
                 ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Manifest.permission.ACCESS_COARSE_LOCATION) != PERM_GRANT) {
             requestPermissions(new String[]{
                     Manifest.permission.BLUETOOTH_ADMIN,
                     Manifest.permission.ACCESS_COARSE_LOCATION},
@@ -130,14 +131,14 @@ public class MainActivity extends AppCompatActivity {
                         int weight = 0;
                         int[] mfacs = {1, 16, 256, 4096};
                         boolean transmissionError = false;
-                        for (int i = 0; i < 4; i++) {
+                        for (int i = 0; i < 4 && !transmissionError; i++) {
                             byte t = manSpData[manSpData.length-1-i];
-                            if (t >> 4 != 15 - (t & 0x0F)) transmissionError = true;
-                            weight += (t >> 4) * mfacs[i];
+                            if ((t & 0xF0) >> 4 != 15 - (t & 0x0F)) transmissionError = true;
+                            weight += ((t & 0xF0) >> 4) * mfacs[i];
                         }
-                        if ((manSpData[manSpData.length-5] & 0x08) == 0x08) weight = -weight;
-                        boolean stabilized = (manSpData[manSpData.length-5] & 0x01) == 0x01;
                         if (!transmissionError) {
+                            if ((manSpData[manSpData.length-5] & 0x08) == 0x08) weight = -weight;
+                            boolean stabilized = (manSpData[manSpData.length-5] & 0x01) == 0x01;
                             mTextViewWeight.setText(Integer.toString(weight));
                         }
                     }
